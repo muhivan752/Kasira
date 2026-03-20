@@ -7,6 +7,7 @@
 - [x] Migration Batch 3 (categories, products, product_variants, modifiers, outlet_product_overrides, ingredients, ingredient_units, ingredient_suppliers, outlet_stock, recipes, recipe_ingredients)
 - [x] Migration Batch 4 (pricing_rules, shifts, orders, order_items, payments, reservations, purchase_orders, purchase_order_items)
 - [x] Migration Batch 5 (customer_points, point_transactions)
+- [x] Migration Batch 6 (notifications, knowledge_graph_edges, stock_events, stock_snapshots, audit_log, global_event_log)
 
 ## ⏳ IN PROGRESS
 - Menunggu instruksi selanjutnya (FastAPI project init / Auth / CRUD)
