@@ -29,11 +29,13 @@ File dikerjakan:
 - Setup Alembic file 027_reservations.py
 - Setup Alembic file 028_purchase_orders.py
 - Setup Alembic file 029_purchase_order_items.py
+- Setup Alembic file 030_customer_points.py
+- Setup Alembic file 031_point_transactions.py (UNIQUE constraint order_id & type)
 
 ⏳ In Progress:
    Nama: Inisialisasi FastAPI Project
    File: -
-   Sudah: Migration Batch 1, 2, 3, & 4
+   Sudah: Migration Batch 1, 2, 3, 4, & 5
    Tinggal: FastAPI project init, Auth, CRUD, dll
    Catatan: Melanjutkan ke batch berikutnya (FastAPI init).
 
@@ -41,7 +43,7 @@ File dikerjakan:
 - FastAPI project init + Auth + JWT + PIN
 
 ## FILE YANG DIUBAH HARI INI
-- backend/migrations/versions/001_tenants.py s/d 029_purchase_order_items.py
+- backend/migrations/versions/001_tenants.py s/d 031_point_transactions.py
 - MEMORY.md
 - SESSION.md
 
@@ -53,10 +55,12 @@ File dikerjakan:
 - Menambahkan `idempotency_key` pada tabel `payments` dengan unique index (where not null) untuk mencegah double payment.
 - Menggunakan JSONB untuk `modifiers` di `order_items` agar fleksibel menyimpan data modifier yang dipilih.
 - Menambahkan `received_quantity` di `purchase_order_items` untuk tracking penerimaan barang parsial.
+- Menambahkan `customer_points` (030) dan `point_transactions` (031) untuk fitur loyalty.
+- Menambahkan `UniqueConstraint('order_id', 'type')` pada tabel `point_transactions` (Golden Rule #35).
 
 ## BLOCKER
 - Tidak ada.
 
 ## CHECKPOINT TERAKHIR
-Terakhir sampai di: Selesai membuat file migration batch 4 dan fix tabel orders & payments.
+Terakhir sampai di: Selesai membuat file migration batch 5 (loyalty points).
 Besok lanjut dari: Inisialisasi FastAPI project dan setup Auth.

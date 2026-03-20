@@ -5,7 +5,8 @@
 - [x] Migration Batch 1 (tenants, brands, outlets)
 - [x] Migration Batch 2 (roles, users, sessions, devices, suppliers, customers, outlet_tax_config, tables)
 - [x] Migration Batch 3 (categories, products, product_variants, modifiers, outlet_product_overrides, ingredients, ingredient_units, ingredient_suppliers, outlet_stock, recipes, recipe_ingredients)
-- [x] Migration Batch 4 (pricing_rules, orders, order_items, payments, reservations, purchase_orders, purchase_order_items)
+- [x] Migration Batch 4 (pricing_rules, shifts, orders, order_items, payments, reservations, purchase_orders, purchase_order_items)
+- [x] Migration Batch 5 (customer_points, point_transactions)
 
 ## ⏳ IN PROGRESS
 - Menunggu instruksi selanjutnya (FastAPI project init / Auth / CRUD)
