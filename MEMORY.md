@@ -1,0 +1,49 @@
+# KASIRA — Long-Term Memory
+# Update ini setiap selesai satu task!
+
+## ✅ SELESAI
+- [x] Migration Batch 1 (tenants, brands, outlets)
+- [x] Migration Batch 2 (roles, users, sessions, devices, suppliers, customers, outlet_tax_config, tables)
+- [x] Migration Batch 3 (categories, products, product_variants, modifiers, outlet_product_overrides, ingredients, ingredient_units, ingredient_suppliers, outlet_stock, recipes, recipe_ingredients)
+- [x] Migration Batch 4 (pricing_rules, orders, order_items, payments, reservations, purchase_orders, purchase_order_items)
+
+## ⏳ IN PROGRESS
+- Menunggu instruksi selanjutnya (FastAPI project init / Auth / CRUD)
+
+## ⏳ BELUM MULAI
+- FastAPI project init + Auth + JWT + PIN
+- Products + Categories + Orders CRUD
+- Payment + Midtrans QRIS
+- Flutter kasir app (15 layar)
+- Flutter dapur app (8 layar)
+- Self-order Next.js
+- CRDT sync engine
+- Pilot Otomatis rule engine
+- AI chatbot SSE streaming
+
+## Keputusan Teknikal (JANGAN DIUBAH TANPA ALASAN)
+- ORM: SQLAlchemy async (bukan Tortoise)
+- Migration: Alembic
+- Validation: Pydantic v2
+- Auth: PyJWT + bcrypt
+- Background: Celery + Redis
+- Flutter state: Riverpod
+- Flutter offline: Drift
+- HTTP Flutter: Dio + Retrofit
+- Printer: bluetooth_print package
+- Multi-tenant: schema-per-tenant di PostgreSQL
+- AI streaming: SSE (bukan WebSocket) untuk chatbot
+- Payment: Midtrans QRIS + idempotency key
+- Tax: PB1 10%, PPN 12%, service charge configurable
+
+## Lanjut Berikutnya
+Menunggu konfirmasi user untuk lanjut ke Migration Batch 3 (products, modifiers, ingredients, dll).
+
+## Context Files Status
+- context/database.md    → ⏳ In Progress
+- context/auth.md        → ⏳ Belum dibuat
+- context/orders.md      → ⏳ Belum dibuat
+- context/inventory.md   → ⏳ Belum dibuat
+- context/payment.md     → ⏳ Belum dibuat
+- context/flutter-kasir.md → ⏳ Belum dibuat
+- context/connect.md     → ⏳ Belum dibuat
