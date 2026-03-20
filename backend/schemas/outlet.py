@@ -1,0 +1,30 @@
+from typing import Optional
+from pydantic import BaseModel, UUID4
+from datetime import datetime
+
+class OutletBase(BaseModel):
+    name: str
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: Optional[bool] = True
+    tenant_id: UUID4
+    brand_id: Optional[UUID4] = None
+
+class OutletCreate(OutletBase):
+    pass
+
+class OutletUpdate(OutletBase):
+    name: Optional[str] = None
+    tenant_id: Optional[UUID4] = None
+
+class OutletInDBBase(OutletBase):
+    id: UUID4
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class Outlet(OutletInDBBase):
+    pass
