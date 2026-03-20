@@ -83,9 +83,12 @@ File dikerjakan:
 - Menambahkan tabel `outlet_location_detail` (043) dan `supplier_price_history` (044).
 - Menggunakan ALTER TABLE pada `products` (045) untuk menambahkan `sku`, `barcode`, dan `is_subscription`.
 - Menambahkan tabel billing: `subscriptions` (046) dan `invoices` (047), keduanya dilengkapi dengan `row_version`.
+- Update `subscriptions` (046): Tambah `plan_tier`, `outlet_count`, `amount_per_period`, dan `grace_period_end_at`.
 - Menambahkan `subscription_payments` (048).
+- Update `subscription_payments` (048): Ubah `payment_method` menjadi ENUM, tambah `collected_by` (FK users), dan `wa_sent_at`.
 - Menggunakan ALTER TABLE pada `payments` (049) untuk mengubah `order_id` menjadi nullable, serta menambahkan `invoice_id` dan `is_partial`.
 - Menambahkan tabel `partial_payments` (050) dan `payment_refunds` (051) dengan FK `approved_by`.
+- Update `partial_payments` (050): Ubah `payment_method` menjadi ENUM, tambah `status` ENUM (paid/refunded), dan `notes`.
 - Inisialisasi FastAPI project dengan struktur folder yang rapi (`core`, `api`, `models`, `schemas`).
 - Menggunakan format response standar `{success, data, meta, request_id, message}` untuk semua endpoint (kecuali OAuth2 token endpoint).
 - Setup JWT authentication dan PIN verification.

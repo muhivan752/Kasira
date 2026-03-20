@@ -23,11 +23,15 @@ def upgrade():
         sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text('gen_random_uuid()'), primary_key=True),
         sa.Column('tenant_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False),
         sa.Column('plan_name', sa.String(), nullable=False),
+        sa.Column('plan_tier', sa.String(), nullable=False), # Starter/Pro/Business
+        sa.Column('outlet_count', sa.Integer(), server_default='1', nullable=False),
+        sa.Column('amount_per_period', sa.Numeric(12, 2), nullable=False),
         sa.Column('status', postgresql.ENUM('active', 'past_due', 'canceled', 'unpaid', 'trialing', name='subscription_status', create_type=False), server_default='trialing', nullable=False),
         sa.Column('interval', postgresql.ENUM('daily', 'weekly', 'monthly', 'yearly', name='subscription_interval', create_type=False), nullable=False),
         sa.Column('price', sa.Numeric(12, 2), nullable=False),
         sa.Column('current_period_start', sa.DateTime(timezone=True), nullable=False),
         sa.Column('current_period_end', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('grace_period_end_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('cancel_at_period_end', sa.Boolean(), server_default='false', nullable=False),
         sa.Column('canceled_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('row_version', sa.Integer(), server_default='0', nullable=False), # Wajib row_version
