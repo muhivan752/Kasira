@@ -25,20 +25,20 @@ File dikerjakan:
 - Setup Alembic file 023b_shifts.py (ENUM shift_status)
 - Setup Alembic file 024_orders.py (ENUM order_status, order_type, SEQUENCE order_display_seq, FK shift_session_id, service_charge_amount)
 - Setup Alembic file 025_order_items.py (JSONB modifiers)
-- Setup Alembic file 026_payments.py (ENUM payment_method, payment_status, idempotency_key)
+- Setup Alembic file 026_payments.py (ENUM payment_method, payment_status, idempotency_key, amount_due, amount_paid, change_amount, qris_url, midtrans_raw, dll)
 - Setup Alembic file 027_reservations.py
 - Setup Alembic file 028_purchase_orders.py
 - Setup Alembic file 029_purchase_order_items.py
 
 ⏳ In Progress:
-   Nama: Menunggu Instruksi Selanjutnya
+   Nama: Inisialisasi FastAPI Project
    File: -
    Sudah: Migration Batch 1, 2, 3, & 4
    Tinggal: FastAPI project init, Auth, CRUD, dll
-   Catatan: Menunggu arahan user untuk langkah selanjutnya.
+   Catatan: Melanjutkan ke batch berikutnya (FastAPI init).
 
 ❌ Belum:
-- FastAPI project init
+- FastAPI project init + Auth + JWT + PIN
 
 ## FILE YANG DIUBAH HARI INI
 - backend/migrations/versions/001_tenants.py s/d 029_purchase_order_items.py
@@ -49,13 +49,14 @@ File dikerjakan:
 - Menambahkan tabel `shifts` (023b) untuk tracking sesi kasir.
 - Menambahkan `order_display_seq` dan `display_number` di tabel `orders` (Golden Rule #28).
 - Menambahkan `shift_session_id` dan `service_charge_amount` di tabel `orders`.
+- Mengubah struktur tabel `payments` (026) dengan menambahkan `amount_due`, `amount_paid`, `change_amount`, `qris_url`, `midtrans_raw`, `reconciled_at`, dll. Serta mengupdate ENUM `payment_status` menjadi lebih lengkap.
 - Menambahkan `idempotency_key` pada tabel `payments` dengan unique index (where not null) untuk mencegah double payment.
 - Menggunakan JSONB untuk `modifiers` di `order_items` agar fleksibel menyimpan data modifier yang dipilih.
 - Menambahkan `received_quantity` di `purchase_order_items` untuk tracking penerimaan barang parsial.
 
 ## BLOCKER
-- Tidak ada. Menunggu instruksi selanjutnya.
+- Tidak ada.
 
 ## CHECKPOINT TERAKHIR
-Terakhir sampai di: Selesai membuat file migration batch 4 dan fix tabel orders.
-Besok lanjut dari: Menunggu instruksi user untuk inisialisasi FastAPI atau modul lainnya.
+Terakhir sampai di: Selesai membuat file migration batch 4 dan fix tabel orders & payments.
+Besok lanjut dari: Inisialisasi FastAPI project dan setup Auth.
