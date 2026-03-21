@@ -10,6 +10,8 @@ from backend.core.security import get_pin_hash
 from backend.models.user import User
 from backend.schemas.user import User as UserSchema, UserCreateWithPIN, UserUpdate
 from backend.schemas.response import StandardResponse
+from backend.services.audit import log_audit
+import json
 
 router = APIRouter()
 
@@ -39,6 +41,21 @@ async def create_user(
         
     db_user = User(**user_data)
     db.add(db_user)
+    await db.flush() # Flush to get db_user.id
+    
+    # Audit log
+    # Convert UUIDs to strings for JSON serialization
+    after_state = json.loads(user_in.model_dump_json(exclude={"pin"}))
+    await log_audit(
+        db=db,
+        action="CREATE",
+        entity="users",
+        entity_id=db_user.id,
+        after_state=after_state,
+        user_id=current_user.id,
+        tenant_id=db_user.tenant_id
+    )
+    
     await db.commit()
     await db.refresh(db_user)
     return StandardResponse(data=db_user, message="User created successfully")

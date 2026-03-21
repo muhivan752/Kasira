@@ -39,16 +39,29 @@ File dikerjakan:
 - Auth setup (JWT, PIN verification, deps.py, auth routes)
 - Base models and schemas (BaseModel, User, Tenant, Outlet, StandardResponse)
 - CRUD routes for users, tenants, outlets
+- CRUD routes for categories and products
+- Simple Stock logic for products (restock endpoint, auto-hide on 0 stock)
+- CRUD routes for orders and payments (Transaction-First Simple Stock deduct)
+- Payment + Midtrans QRIS integration (API service + Webhook)
+- Setup Flutter App UI (Kasir) - Init project, Theme, Colors, Login Page
+- Setup Flutter App UI (Kasir) - POS Page Layout (Split screen, Product Grid, Cart Panel)
+- Setup Flutter App UI (Kasir) - Dashboard Page (Sidebar, Stats, Recent Orders)
+- Setup Flutter App UI (Kasir) - Payment Modal (Cash/QRIS, Quick Cash, Change calculation)
 
 ⏳ In Progress:
-   Nama: Inisialisasi FastAPI Project
-   File: backend/main.py, backend/api/routes/*
-   Sudah: Migration Batch 1 s/d 8, FastAPI init, Auth, Base CRUD
-   Tinggal: CRUD untuk tabel lainnya
-   Catatan: Melanjutkan pembuatan CRUD untuk tabel-tabel lainnya.
+   Nama: Setup Flutter App UI
+   File: kasir_app/lib/*
+   Sudah: Init Flutter project, Theme, Login Page, POS Page, Dashboard Page, Payment Modal
+   Tinggal: Melanjutkan pembuatan 11 layar kasir lainnya (Order List, Shift Management, dll)
+   Catatan: Menggunakan Riverpod untuk state management dan GoRouter untuk routing.
 
 ❌ Belum:
-- CRUD endpoints untuk tabel-tabel transaksi dan master data lainnya
+- Flutter kasir app (11 layar tersisa)
+- Flutter dapur app (8 layar)
+- Self-order Next.js
+- CRDT sync engine
+- Pilot Otomatis rule engine
+- AI chatbot SSE streaming
 
 ## FILE YANG DIUBAH HARI INI
 - backend/migrations/versions/001_tenants.py s/d 051_payment_refunds.py
@@ -63,15 +76,40 @@ File dikerjakan:
 - backend/api/routes/users.py
 - backend/api/routes/tenants.py
 - backend/api/routes/outlets.py
+- backend/api/routes/categories.py
+- backend/api/routes/products.py
+- backend/api/routes/orders.py
+- backend/api/routes/payments.py
 - backend/models/base.py
 - backend/models/user.py
 - backend/models/tenant.py
 - backend/models/outlet.py
+- backend/models/category.py
+- backend/models/product.py
+- backend/models/order.py
+- backend/models/payment.py
 - backend/schemas/token.py
 - backend/schemas/user.py
 - backend/schemas/tenant.py
 - backend/schemas/outlet.py
+- backend/schemas/category.py
+- backend/schemas/product.py
+- backend/schemas/stock.py
+- backend/schemas/order.py
+- backend/schemas/payment.py
 - backend/schemas/response.py
+- backend/services/midtrans.py
+- kasir_app/pubspec.yaml
+- kasir_app/lib/main.dart
+- kasir_app/lib/core/theme/app_colors.dart
+- kasir_app/lib/core/theme/app_theme.dart
+- kasir_app/lib/features/auth/presentation/pages/login_page.dart
+- kasir_app/lib/features/pos/presentation/pages/pos_page.dart
+- kasir_app/lib/features/pos/presentation/widgets/product_card.dart
+- kasir_app/lib/features/pos/presentation/widgets/cart_panel.dart
+- kasir_app/lib/features/pos/presentation/widgets/payment_modal.dart
+- kasir_app/lib/features/dashboard/presentation/pages/dashboard_page.dart
+- app/page.tsx
 - MEMORY.md
 - SESSION.md
 
@@ -92,10 +130,31 @@ File dikerjakan:
 - Inisialisasi FastAPI project dengan struktur folder yang rapi (`core`, `api`, `models`, `schemas`).
 - Menggunakan format response standar `{success, data, meta, request_id, message}` untuk semua endpoint (kecuali OAuth2 token endpoint).
 - Setup JWT authentication dan PIN verification.
+- Implementasi CRUD Categories & Products.
+- Implementasi Simple Stock (Tier Starter): Tambah endpoint `/products/{id}/restock` dan auto-hide jika stok <= 0.
+- Implementasi CRUD Orders & Payments:
+  - `POST /orders`: Membuat order dan otomatis memotong stok produk (Transaction-First). Jika stok <= 0 dan `stock_auto_hide` aktif, produk otomatis disembunyikan.
+  - `POST /payments`: Membuat payment. Jika metode `cash`, status langsung `paid` dan status order menjadi `completed`. Jika `qris`, status `pending` dan generate mock QRIS URL.
+- Integrasi Midtrans QRIS:
+  - Menambahkan `httpx` ke `requirements.txt`.
+  - Membuat `backend/services/midtrans.py` untuk generate QRIS via Midtrans Core API.
+  - Menambahkan endpoint `POST /payments/webhook/midtrans` untuk menerima notifikasi dari Midtrans (dengan verifikasi `signature_key`).
+  - Jika webhook menerima status `settlement`, status payment otomatis menjadi `paid` dan status order menjadi `completed`.
+- Inisialisasi Flutter Kasir App (`kasir_app`):
+  - Menggunakan arsitektur Feature-First.
+  - State management: `flutter_riverpod`.
+  - Routing: `go_router`.
+  - Theme: Menggunakan warna utama `#FF5C00` dan font `Syne` (untuk headings) serta `Inter` (untuk body text) sesuai dengan Logo System Kasira.
+  - Membuat `LoginPage` sebagai layar pertama dengan desain modern, card putih di atas background orange, dan input PIN yang besar.
+  - Membuat `PosPage` (Point of Sale) dengan layout split-screen (kiri: kategori & grid produk, kanan: keranjang/cart).
+  - Membuat komponen `ProductCard` dengan overlay "HABIS" otomatis jika stok 0.
+  - Membuat komponen `CartPanel` dengan pilihan Dine In/Takeaway dan rincian subtotal/pajak.
+  - Membuat `DashboardPage` dengan Sidebar Navigation, Stats Cards (Pendapatan, Transaksi), dan daftar Transaksi Terakhir.
+  - Membuat `PaymentModal` untuk memproses pembayaran (Pilih Cash/QRIS, hitung kembalian otomatis, tombol Quick Cash).
 
 ## BLOCKER
 - Tidak ada.
 
 ## CHECKPOINT TERAKHIR
-Terakhir sampai di: Selesai inisialisasi FastAPI project, setup Auth, dan CRUD dasar (users, tenants, outlets).
-Besok lanjut dari: Pembuatan CRUD untuk tabel-tabel lainnya.
+Terakhir sampai di: Selesai membuat Dashboard Page dan Payment Modal di Flutter.
+Besok lanjut dari: Pembuatan halaman Order List (Daftar Pesanan) dan Shift Management di Flutter.

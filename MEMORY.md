@@ -12,12 +12,10 @@
 - [x] Migration Batch 8 (outlet_location_detail, supplier_price_history, products_update, subscriptions, invoices, subscription_payments, payments_update, partial_payments, payment_refunds)
 
 ## ⏳ IN PROGRESS
-- Menunggu instruksi selanjutnya (FastAPI project init / Auth / CRUD)
+- Setup Flutter App UI (Kasir)
+- Menunggu instruksi selanjutnya (Flutter UI)
 
 ## ⏳ BELUM MULAI
-- FastAPI project init + Auth + JWT + PIN
-- Products + Categories + Orders CRUD
-- Payment + Midtrans QRIS
 - Flutter kasir app (15 layar)
 - Flutter dapur app (8 layar)
 - Self-order Next.js

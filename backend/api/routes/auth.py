@@ -41,9 +41,22 @@ async def send_otp(
     # Generate 6-digit OTP
     otp = str(random.randint(100000, 999999))
     
-    # Save to Redis with 5 minutes TTL
     redis = await get_redis_client()
+    
+    # Check rate limit: max 3x resend per 15 minutes
+    rate_limit_key = f"otp_count:{request.phone}"
+    current_count = await redis.get(rate_limit_key)
+    if current_count and int(current_count) >= 3:
+        raise HTTPException(status_code=429, detail="Too many OTP requests. Please try again after 15 minutes.")
+    
+    # Save to Redis with 5 minutes TTL
     await redis.setex(f"otp:{request.phone}", 300, otp)
+    
+    # Increment rate limit counter
+    if not current_count:
+        await redis.setex(rate_limit_key, 900, 1) # 15 minutes
+    else:
+        await redis.incr(rate_limit_key)
     
     # Send via Fonnte
     message = f"Your Kasira OTP code is: {otp}. It will expire in 5 minutes. Do not share this code with anyone."

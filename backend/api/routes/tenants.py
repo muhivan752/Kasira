@@ -9,6 +9,8 @@ from backend.api import deps
 from backend.models.tenant import Tenant
 from backend.schemas.tenant import Tenant as TenantSchema, TenantCreate, TenantUpdate
 from backend.schemas.response import StandardResponse, ResponseMeta
+from backend.services.audit import log_audit
+import json
 
 router = APIRouter()
 
@@ -51,6 +53,19 @@ async def create_tenant(
     
     db_tenant = Tenant(**tenant_in.model_dump())
     db.add(db_tenant)
+    await db.flush()
+    
+    after_state = json.loads(tenant_in.model_dump_json())
+    await log_audit(
+        db=db,
+        action="CREATE",
+        entity="tenants",
+        entity_id=db_tenant.id,
+        after_state=after_state,
+        user_id=current_user.id,
+        tenant_id=db_tenant.id
+    )
+    
     await db.commit()
     await db.refresh(db_tenant)
     return StandardResponse(data=db_tenant, message="Tenant created successfully")

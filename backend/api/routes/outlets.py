@@ -9,6 +9,8 @@ from backend.api import deps
 from backend.models.outlet import Outlet
 from backend.schemas.outlet import Outlet as OutletSchema, OutletCreate, OutletUpdate
 from backend.schemas.response import StandardResponse, ResponseMeta
+from backend.services.audit import log_audit
+import json
 
 router = APIRouter()
 
@@ -44,6 +46,19 @@ async def create_outlet(
     """
     db_outlet = Outlet(**outlet_in.model_dump())
     db.add(db_outlet)
+    await db.flush()
+    
+    after_state = json.loads(outlet_in.model_dump_json())
+    await log_audit(
+        db=db,
+        action="CREATE",
+        entity="outlets",
+        entity_id=db_outlet.id,
+        after_state=after_state,
+        user_id=current_user.id,
+        tenant_id=db_outlet.tenant_id
+    )
+    
     await db.commit()
     await db.refresh(db_outlet)
     return StandardResponse(data=db_outlet, message="Outlet created successfully")
