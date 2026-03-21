@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'payment_modal.dart';
+import '../../../customers/presentation/widgets/customer_selection_modal.dart';
 
 class CartPanel extends StatefulWidget {
   const CartPanel({super.key});
@@ -31,6 +32,13 @@ class _CartPanelState extends State<CartPanel> {
           );
         },
       ),
+    );
+  }
+
+  void _showCustomerSelectionModal() {
+    showDialog(
+      context: context,
+      builder: (context) => const CustomerSelectionModal(),
     );
   }
 
@@ -74,20 +82,23 @@ class _CartPanelState extends State<CartPanel> {
         // Customer Selection
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(LucideIcons.user, color: AppColors.textSecondary, size: 20),
-                const SizedBox(width: 12),
-                const Text('Pilih Pelanggan', style: TextStyle(color: AppColors.textSecondary)),
-                const Spacer(),
-                const Icon(LucideIcons.chevronRight, color: AppColors.textSecondary, size: 20),
-              ],
+          child: InkWell(
+            onTap: _showCustomerSelectionModal,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(LucideIcons.user, color: AppColors.textSecondary, size: 20),
+                  SizedBox(width: 12),
+                  Text('Pilih Pelanggan', style: TextStyle(color: AppColors.textSecondary)),
+                  Spacer(),
+                  Icon(LucideIcons.chevronRight, color: AppColors.textSecondary, size: 20),
+                ],
+              ),
             ),
           ),
         ),
