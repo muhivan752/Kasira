@@ -47,16 +47,18 @@ File dikerjakan:
 - Setup Flutter App UI (Kasir) - POS Page Layout (Split screen, Product Grid, Cart Panel)
 - Setup Flutter App UI (Kasir) - Dashboard Page (Sidebar, Stats, Recent Orders)
 - Setup Flutter App UI (Kasir) - Payment Modal (Cash/QRIS, Quick Cash, Change calculation)
+- Setup Flutter App UI (Kasir) - Order List Page (Tabs: Semua, Diproses, Selesai, Batal)
+- Setup Flutter App UI (Kasir) - Shift Management Page (Buka/Tutup Shift, Modal Awal, Rekap)
 
 ⏳ In Progress:
    Nama: Setup Flutter App UI
    File: kasir_app/lib/*
-   Sudah: Init Flutter project, Theme, Login Page, POS Page, Dashboard Page, Payment Modal
-   Tinggal: Melanjutkan pembuatan 11 layar kasir lainnya (Order List, Shift Management, dll)
+   Sudah: Init Flutter project, Theme, Login Page, POS Page, Dashboard Page, Payment Modal, Order List, Shift Page
+   Tinggal: Melanjutkan pembuatan 9 layar kasir lainnya (Product Management, Settings, dll)
    Catatan: Menggunakan Riverpod untuk state management dan GoRouter untuk routing.
 
 ❌ Belum:
-- Flutter kasir app (11 layar tersisa)
+- Flutter kasir app (9 layar tersisa)
 - Flutter dapur app (8 layar)
 - Self-order Next.js
 - CRDT sync engine
@@ -109,6 +111,8 @@ File dikerjakan:
 - kasir_app/lib/features/pos/presentation/widgets/cart_panel.dart
 - kasir_app/lib/features/pos/presentation/widgets/payment_modal.dart
 - kasir_app/lib/features/dashboard/presentation/pages/dashboard_page.dart
+- kasir_app/lib/features/orders/presentation/pages/order_list_page.dart
+- kasir_app/lib/features/shift/presentation/pages/shift_page.dart
 - app/page.tsx
 - MEMORY.md
 - SESSION.md
@@ -151,10 +155,12 @@ File dikerjakan:
   - Membuat komponen `CartPanel` dengan pilihan Dine In/Takeaway dan rincian subtotal/pajak.
   - Membuat `DashboardPage` dengan Sidebar Navigation, Stats Cards (Pendapatan, Transaksi), dan daftar Transaksi Terakhir.
   - Membuat `PaymentModal` untuk memproses pembayaran (Pilih Cash/QRIS, hitung kembalian otomatis, tombol Quick Cash).
+  - Membuat `OrderListPage` dengan TabBar (Semua, Diproses, Selesai, Batal) dan Search Bar.
+  - Membuat `ShiftPage` untuk manajemen laci kasir (Modal Awal, Penerimaan, Pengeluaran, Input Aktual).
 
 ## BLOCKER
 - Tidak ada.
 
 ## CHECKPOINT TERAKHIR
-Terakhir sampai di: Selesai membuat Dashboard Page dan Payment Modal di Flutter.
-Besok lanjut dari: Pembuatan halaman Order List (Daftar Pesanan) dan Shift Management di Flutter.
+Terakhir sampai di: Selesai membuat Order List Page dan Shift Management Page di Flutter.
+Besok lanjut dari: Pembuatan halaman Product Management (Basic) dan Settings di Flutter, atau mulai Self-Order Next.js.

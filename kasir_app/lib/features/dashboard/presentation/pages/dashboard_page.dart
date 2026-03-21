@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../pos/presentation/pages/pos_page.dart';
+import '../../../orders/presentation/pages/order_list_page.dart';
+import '../../../shift/presentation/pages/shift_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,7 +18,7 @@ class _DashboardPageState extends State<DashboardPage> {
   final List<Widget> _pages = [
     const _DashboardContent(),
     const PosPage(),
-    const Center(child: Text('Daftar Pesanan')),
+    const OrderListPage(),
     const Center(child: Text('Manajemen Produk')),
     const Center(child: Text('Pengaturan')),
   ];
@@ -134,7 +136,12 @@ class _DashboardContent extends StatelessWidget {
                 ],
               ),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ShiftPage()),
+                  );
+                },
                 icon: const Icon(LucideIcons.logOut, size: 18),
                 label: const Text('Tutup Shift'),
                 style: ElevatedButton.styleFrom(
@@ -245,3 +252,4 @@ class _DashboardContent extends StatelessWidget {
     );
   }
 }
+
