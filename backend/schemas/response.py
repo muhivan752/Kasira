@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, Optional, Any
 from pydantic import BaseModel, Field
-import uuid
+from backend.core.request_context import get_request_id
 
 DataT = TypeVar('DataT')
 
@@ -14,5 +14,5 @@ class StandardResponse(BaseModel, Generic[DataT]):
     success: bool = True
     data: Optional[DataT] = None
     meta: Optional[ResponseMeta] = None
-    request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    request_id: str = Field(default_factory=get_request_id)
     message: Optional[str] = None

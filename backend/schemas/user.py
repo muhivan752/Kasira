@@ -1,10 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, UUID4
+from pydantic import BaseModel, UUID4
 from datetime import datetime
 
 # Shared properties
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
     is_active: Optional[bool] = True
     is_superuser: bool = False
     full_name: Optional[str] = None
@@ -13,8 +13,7 @@ class UserBase(BaseModel):
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    email: EmailStr
-    password: str
+    phone: str
     full_name: str
     tenant_id: UUID4
 
@@ -23,7 +22,6 @@ class UserCreateWithPIN(UserCreate):
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
-    password: Optional[str] = None
     pin: Optional[str] = None
 
 class UserInDBBase(UserBase):
@@ -42,5 +40,4 @@ class User(UserInDBBase):
 
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
-    hashed_password: str
-    hashed_pin: Optional[str] = None
+    pin_hash: Optional[str] = None
