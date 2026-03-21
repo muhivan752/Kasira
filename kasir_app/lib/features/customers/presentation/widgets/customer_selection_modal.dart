@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'add_customer_modal.dart';
 
 class CustomerSelectionModal extends StatelessWidget {
   const CustomerSelectionModal({super.key});
+
+  void _showAddCustomerModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const AddCustomerModal(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +59,7 @@ class CustomerSelectionModal extends StatelessWidget {
             
             // Add New Customer Button
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () => _showAddCustomerModal(context),
               icon: const Icon(LucideIcons.userPlus, size: 18),
               label: const Text('Tambah Pelanggan Baru'),
               style: OutlinedButton.styleFrom(

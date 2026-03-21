@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/order_detail_modal.dart';
 
 class OrderListPage extends StatefulWidget {
   const OrderListPage({super.key});
@@ -22,6 +23,13 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _showOrderDetail(String orderId) {
+    showDialog(
+      context: context,
+      builder: (context) => OrderDetailModal(orderId: orderId),
+    );
   }
 
   @override
@@ -96,6 +104,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       padding: const EdgeInsets.all(24),
       itemCount: 10,
       itemBuilder: (context, index) {
+        final orderId = 'ORD-20260321-${1000 + index}';
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -116,7 +125,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ORD-20260321-${1000 + index}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 4),
                       const Text('Dine In • Meja 4 • 3 Items', style: TextStyle(color: AppColors.textSecondary)),
                     ],
@@ -139,7 +148,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
                 ),
                 const SizedBox(width: 24),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _showOrderDetail(orderId),
                   child: const Text('Detail'),
                 ),
               ],

@@ -52,16 +52,19 @@ File dikerjakan:
 - Setup Flutter App UI (Kasir) - Product Management Page (Toggle Habis/Tersedia)
 - Setup Flutter App UI (Kasir) - Settings Page (Printer, Sync, Profil Kasir)
 - Setup Flutter App UI (Kasir) - Customer Selection Modal (Pilih Pelanggan di POS)
+- Setup Flutter App UI (Kasir) - Order Detail Modal (Rincian Pesanan)
+- Setup Flutter App UI (Kasir) - Add Customer Modal (Tambah Pelanggan Baru)
+- Setup Flutter App UI (Kasir) - Printer Settings Page (Bluetooth Printer Config)
 
 ⏳ In Progress:
    Nama: Setup Flutter App UI
    File: kasir_app/lib/*
-   Sudah: Init Flutter project, Theme, Login Page, POS Page, Dashboard Page, Payment Modal, Order List, Shift Page, Product Management, Settings, Customer Selection
-   Tinggal: Melanjutkan pembuatan 6 layar kasir lainnya (Order Detail, dll)
+   Sudah: Init Flutter project, Theme, Login Page, POS Page, Dashboard Page, Payment Modal, Order List, Shift Page, Product Management, Settings, Customer Selection, Order Detail, Add Customer, Printer Settings
+   Tinggal: Melanjutkan pembuatan 3 layar kasir lainnya (Sync Settings, Cash Drawer History, Profile)
    Catatan: Menggunakan Riverpod untuk state management dan GoRouter untuk routing.
 
 ❌ Belum:
-- Flutter kasir app (6 layar tersisa)
+- Flutter kasir app (3 layar tersisa)
 - Flutter dapur app (8 layar)
 - Self-order Next.js
 - CRDT sync engine
@@ -119,6 +122,9 @@ File dikerjakan:
 - kasir_app/lib/features/products/presentation/pages/product_management_page.dart
 - kasir_app/lib/features/settings/presentation/pages/settings_page.dart
 - kasir_app/lib/features/customers/presentation/widgets/customer_selection_modal.dart
+- kasir_app/lib/features/orders/presentation/widgets/order_detail_modal.dart
+- kasir_app/lib/features/customers/presentation/widgets/add_customer_modal.dart
+- kasir_app/lib/features/settings/presentation/pages/printer_settings_page.dart
 - app/page.tsx
 - MEMORY.md
 - SESSION.md
@@ -166,10 +172,13 @@ File dikerjakan:
   - Membuat `ProductManagementPage` untuk mengubah status ketersediaan produk (Tersedia/Habis).
   - Membuat `SettingsPage` untuk pengaturan printer, sinkronisasi, dan profil.
   - Membuat `CustomerSelectionModal` untuk memilih atau menambah pelanggan saat transaksi POS.
+  - Membuat `OrderDetailModal` untuk melihat rincian pesanan dari Order List.
+  - Membuat `AddCustomerModal` untuk menambah pelanggan baru.
+  - Membuat `PrinterSettingsPage` untuk mengatur koneksi Bluetooth printer.
 
 ## BLOCKER
 - Tidak ada.
 
 ## CHECKPOINT TERAKHIR
-Terakhir sampai di: Selesai membuat Product Management Page, Settings Page, dan Customer Selection Modal di Flutter.
-Besok lanjut dari: Pembuatan halaman Order Detail, atau mulai Self-Order Next.js.
+Terakhir sampai di: Selesai membuat Order Detail Modal, Add Customer Modal, dan Printer Settings Page di Flutter.
+Besok lanjut dari: Selesaikan 3 layar sisa (Sync Settings, Cash Drawer History, Profile) atau mulai Self-Order Next.js.
