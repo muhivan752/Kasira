@@ -49,6 +49,7 @@ class OrderItem(BaseModel):
     from sqlalchemy.dialects.postgresql import JSONB
     modifiers = Column(JSONB(astext_type=Text()), nullable=True)
     notes = Column(Text, nullable=True)
+    row_version = Column(Integer, server_default='0', nullable=False)
 
     # Relationships
     order = relationship("Order", back_populates="items")

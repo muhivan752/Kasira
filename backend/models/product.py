@@ -41,3 +41,19 @@ class Product(BaseModel):
     # Relationships
     brand = relationship("Brand", back_populates="products")
     category = relationship("Category", back_populates="products")
+
+class OutletStock(BaseModel):
+    __tablename__ = "outlet_stock"
+
+    outlet_id = Column(UUID(as_uuid=True), ForeignKey('outlets.id', ondelete='CASCADE'), nullable=False)
+    product_id = Column(UUID(as_uuid=True), ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    
+    from sqlalchemy.dialects.postgresql import JSONB
+    crdt_positive = Column(JSONB, server_default='{}', nullable=False)
+    crdt_negative = Column(JSONB, server_default='{}', nullable=False)
+    computed_stock = Column(Integer, server_default='0', nullable=False)
+    row_version = Column(Integer, server_default='0', nullable=False)
+
+    __table_args__ = (
+        CheckConstraint('computed_stock >= 0', name='chk_outlet_stock_computed'),
+    )

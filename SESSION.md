@@ -63,6 +63,12 @@ File dikerjakan:
    Tinggal: Melanjutkan pembuatan 3 layar kasir lainnya (Sync Settings, Cash Drawer History, Profile)
    Catatan: Menggunakan Riverpod untuk state management dan GoRouter untuk routing.
 
+⏳ In Progress:
+   Nama: Backend Sync Engine (Pure CRDT)
+   File: backend/services/crdt.py, backend/services/sync.py, backend/api/routes/sync.py, backend/migrations/versions/052_add_missing_row_versions.py
+   Sudah: Create migration for missing row_versions, update models, create CRDT math engine (HLC, PNCounter), create sync orchestrator, refactor /sync endpoint to use Pure CRDT.
+   Tinggal: Testing sync endpoint.
+
 ❌ Belum:
 - Flutter kasir app (3 layar tersisa)
 - Flutter dapur app (8 layar)
