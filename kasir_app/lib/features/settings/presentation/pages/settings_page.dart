@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'printer_settings_page.dart';
+import 'sync_settings_page.dart';
+import 'profile_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -50,7 +52,12 @@ class SettingsPage extends StatelessWidget {
                   icon: LucideIcons.refreshCw,
                   title: 'Sinkronisasi Data Manual',
                   subtitle: 'Terakhir sinkron: 10 menit yang lalu',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SyncSettingsPage()),
+                    );
+                  },
                 ),
                 _buildSettingTile(
                   icon: LucideIcons.database,
@@ -65,7 +72,12 @@ class SettingsPage extends StatelessWidget {
                   icon: LucideIcons.user,
                   title: 'Profil Kasir',
                   subtitle: 'Budi (Shift Pagi)',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ProfilePage()),
+                    );
+                  },
                 ),
                 _buildSettingTile(
                   icon: LucideIcons.helpCircle,

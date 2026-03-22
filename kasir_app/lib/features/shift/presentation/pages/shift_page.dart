@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'cash_drawer_history_page.dart';
 
 class ShiftPage extends StatelessWidget {
   const ShiftPage({super.key});
@@ -14,6 +15,19 @@ class ShiftPage extends StatelessWidget {
         title: const Text('Manajemen Shift', style: TextStyle(color: AppColors.textPrimary)),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CashDrawerHistoryPage()),
+              );
+            },
+            icon: const Icon(LucideIcons.history, color: AppColors.primary),
+            label: const Text('Riwayat Kas', style: TextStyle(color: AppColors.primary)),
+          ),
+          const SizedBox(width: 16),
+        ],
       ),
       body: Center(
         child: Container(
