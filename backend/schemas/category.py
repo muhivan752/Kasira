@@ -17,6 +17,7 @@ class CategoryUpdate(BaseModel):
 class CategoryResponse(CategoryBase):
     id: UUID
     brand_id: UUID
+    row_version: int
     created_at: datetime
     updated_at: datetime
     

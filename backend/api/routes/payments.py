@@ -11,6 +11,7 @@ from backend.api.deps import get_current_user
 from backend.models.user import User
 from backend.models.payment import Payment
 from backend.models.order import Order
+from backend.models.shift import Shift, ShiftStatus
 from backend.schemas.payment import PaymentCreate, PaymentResponse, PaymentStatus, PaymentMethod
 from backend.schemas.order import OrderStatus
 from backend.schemas.response import StandardResponse
@@ -44,10 +45,25 @@ async def create_payment(
         initial_status = PaymentStatus.paid
         paid_at = datetime.now(timezone.utc)
         
+    # Find active shift for the user in this outlet if not provided
+    shift_session_id = payment_in.shift_session_id
+    if not shift_session_id:
+        shift_query = select(Shift).where(
+            Shift.outlet_id == payment_in.outlet_id,
+            Shift.user_id == current_user.id,
+            Shift.status == ShiftStatus.open,
+            Shift.deleted_at.is_(None)
+        )
+        shift_result = await db.execute(shift_query)
+        active_shift = shift_result.scalar_one_or_none()
+        if active_shift:
+            shift_session_id = active_shift.id
+        
     payment = Payment(
         order_id=payment_in.order_id,
         outlet_id=payment_in.outlet_id,
         invoice_id=payment_in.invoice_id,
+        shift_session_id=shift_session_id,
         payment_method=payment_in.payment_method,
         amount_due=payment_in.amount_due,
         amount_paid=payment_in.amount_paid,

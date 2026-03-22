@@ -19,6 +19,7 @@ class OutletUpdate(OutletBase):
 
 class OutletInDBBase(OutletBase):
     id: UUID4
+    row_version: int
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime] = None

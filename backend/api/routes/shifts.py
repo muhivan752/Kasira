@@ -155,11 +155,9 @@ async def close_shift(
     cash_payments_query = select(
         func.sum(Payment.amount_paid - Payment.change_amount).label("total_cash")
     ).where(
-        Payment.outlet_id == shift.outlet_id,
-        Payment.processed_by == shift.user_id,
+        Payment.shift_session_id == shift_id,
         Payment.payment_method == 'cash',
         Payment.status == 'paid',
-        Payment.created_at >= shift.start_time,
         Payment.deleted_at.is_(None)
     )
     

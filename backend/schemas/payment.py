@@ -24,6 +24,7 @@ class PaymentBase(BaseModel):
     order_id: Optional[UUID] = None
     outlet_id: UUID
     invoice_id: Optional[UUID] = None
+    shift_session_id: Optional[UUID] = None
     payment_method: PaymentMethod
     amount_due: Decimal = Field(..., ge=0)
     amount_paid: Decimal = Field(..., ge=0)
