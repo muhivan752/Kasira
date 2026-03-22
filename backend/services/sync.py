@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, or_, and_
 from datetime import datetime, timezone
 from typing import Any, List, Dict
 import uuid
@@ -13,7 +14,7 @@ from backend.services.crdt import HLC, PNCounter
 def utc_now():
     return datetime.now(timezone.utc)
 
-def process_table_sync(db: Session, model_class, client_records: List[Dict[str, Any]], filter_kwargs: dict, server_hlc: HLC):
+async def process_table_sync(db: AsyncSession, model_class, client_records: List[Dict[str, Any]], filter_kwargs: dict, server_hlc: HLC):
     """
     Pure CRDT Sync logic for a table using HLC and row_version.
     """
@@ -34,11 +35,12 @@ def process_table_sync(db: Session, model_class, client_records: List[Dict[str, 
         server_hlc.receive(client_hlc)
                 
         # Query existing record
-        query = db.query(model_class).filter(model_class.id == record_id)
+        stmt = select(model_class).filter(model_class.id == record_id)
         for k, v in filter_kwargs.items():
-            query = query.filter(getattr(model_class, k) == v)
+            stmt = stmt.filter(getattr(model_class, k) == v)
             
-        db_record = query.first()
+        result = await db.execute(stmt)
+        db_record = result.scalar_one_or_none()
         
         if db_record:
             # Optimistic Locking & CRDT Conflict Resolution
@@ -80,14 +82,12 @@ def process_table_sync(db: Session, model_class, client_records: List[Dict[str, 
                 new_record.row_version = 1
             db.add(new_record)
             
-    db.commit()
+    await db.commit()
 
-def process_stock_sync(db: Session, client_records: List[Dict[str, Any]], outlet_id: uuid.UUID, server_hlc: HLC):
+async def process_stock_sync(db: AsyncSession, client_records: List[Dict[str, Any]], outlet_id: uuid.UUID, server_hlc: HLC):
     """
     Process PN-Counter sync for outlet_stock.
     """
-    # Note: Assuming OutletStock model exists. If not, we will need to import it.
-    # For now, we'll implement the logic assuming the model structure.
     from backend.models.product import OutletStock
     
     for record in client_records:
@@ -103,10 +103,12 @@ def process_stock_sync(db: Session, client_records: List[Dict[str, Any]], outlet
         client_p = record.get("crdt_positive", {})
         client_n = record.get("crdt_negative", {})
         
-        db_record = db.query(OutletStock).filter(
+        stmt = select(OutletStock).filter(
             OutletStock.product_id == product_id,
             OutletStock.outlet_id == outlet_id
-        ).first()
+        )
+        result = await db.execute(stmt)
+        db_record = result.scalar_one_or_none()
         
         if db_record:
             # Merge PN-Counters
@@ -133,22 +135,35 @@ def process_stock_sync(db: Session, client_records: List[Dict[str, Any]], outlet
             )
             db.add(new_record)
             
-    db.commit()
+    await db.commit()
 
-def get_table_changes(db: Session, model_class, filter_kwargs: dict, last_sync_hlc: HLC) -> List[Dict[str, Any]]:
-    query = db.query(model_class)
+async def get_table_changes(db: AsyncSession, model_class, filter_kwargs: dict, last_sync_hlc: HLC) -> List[Dict[str, Any]]:
+    stmt = select(model_class)
     for k, v in filter_kwargs.items():
-        query = query.filter(getattr(model_class, k) == v)
+        stmt = stmt.filter(getattr(model_class, k) == v)
         
     if last_sync_hlc and last_sync_hlc.timestamp > 0:
         # Convert HLC timestamp back to datetime for querying
         last_sync_dt = datetime.fromtimestamp(last_sync_hlc.timestamp / 1000.0, tz=timezone.utc)
-        # We also use row_version to ensure we don't miss updates that happened in the same millisecond
-        query = query.filter(model_class.updated_at >= last_sync_dt)
+        last_counter = last_sync_hlc.counter
         
-    records = query.all()
+        if hasattr(model_class, "row_version"):
+            stmt = stmt.filter(
+                or_(
+                    model_class.updated_at > last_sync_dt,
+                    and_(
+                        model_class.updated_at == last_sync_dt,
+                        model_class.row_version > last_counter
+                    )
+                )
+            )
+        else:
+            stmt = stmt.filter(model_class.updated_at >= last_sync_dt)
+        
+    result = await db.execute(stmt)
+    records = result.scalars().all()
     
-    result = []
+    result_list = []
     for r in records:
         record_dict = {}
         for c in r.__table__.columns:
@@ -169,6 +184,6 @@ def get_table_changes(db: Session, model_class, filter_kwargs: dict, last_sync_h
         r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id="server")
         record_dict["hlc"] = r_hlc.to_string()
         
-        result.append(record_dict)
+        result_list.append(record_dict)
         
-    return result
+    return result_list
