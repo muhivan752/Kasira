@@ -36,8 +36,16 @@ async def sync_data(
     brand_id = outlet.brand_id
     outlet_id = outlet.id
     
+    # Validate and enforce node_id format
+    if not request.node_id or ":" not in request.node_id:
+        # If client didn't send proper node_id, we enforce a default one for this session
+        client_node_id = f"{outlet_id}:unknown_device"
+    else:
+        client_node_id = request.node_id
+        
     # Initialize Server HLC
-    server_hlc = HLC.generate(node_id="server")
+    server_node_id = f"server:{outlet_id}"
+    server_hlc = HLC.generate(node_id=server_node_id)
     
     # 1. PUSH (Apply changes from client to server)
     if request.changes:
@@ -46,11 +54,11 @@ async def sync_data(
         if request.changes.products:
             await process_table_sync(db, Product, request.changes.products, {"brand_id": brand_id}, server_hlc)
         if request.changes.orders:
-            await process_table_sync(db, Order, request.changes.orders, {"outlet_id": outlet_id}, server_hlc)
+            await process_table_sync(db, Order, request.changes.orders, {"outlet_id": outlet_id}, server_hlc, conflict_strategy="financial_strict")
         if request.changes.order_items:
             await process_table_sync(db, OrderItem, request.changes.order_items, {}, server_hlc)
         if request.changes.payments:
-            await process_table_sync(db, Payment, request.changes.payments, {"outlet_id": outlet_id}, server_hlc)
+            await process_table_sync(db, Payment, request.changes.payments, {"outlet_id": outlet_id}, server_hlc, conflict_strategy="financial_strict")
         if request.changes.outlet_stock:
             await process_stock_sync(db, request.changes.outlet_stock, outlet_id, server_hlc)
             
@@ -63,11 +71,11 @@ async def sync_data(
             pass # Invalid HLC string, pull everything
             
     pull_changes = SyncPayload(
-        categories=await get_table_changes(db, Category, {"brand_id": brand_id}, client_last_sync_hlc),
-        products=await get_table_changes(db, Product, {"brand_id": brand_id}, client_last_sync_hlc),
-        orders=await get_table_changes(db, Order, {"outlet_id": outlet_id}, client_last_sync_hlc),
+        categories=await get_table_changes(db, Category, {"brand_id": brand_id}, client_last_sync_hlc, server_node_id),
+        products=await get_table_changes(db, Product, {"brand_id": brand_id}, client_last_sync_hlc, server_node_id),
+        orders=await get_table_changes(db, Order, {"outlet_id": outlet_id}, client_last_sync_hlc, server_node_id),
         order_items=[],
-        payments=await get_table_changes(db, Payment, {"outlet_id": outlet_id}, client_last_sync_hlc),
+        payments=await get_table_changes(db, Payment, {"outlet_id": outlet_id}, client_last_sync_hlc, server_node_id),
         outlet_stock=[]
     )
     
@@ -106,7 +114,7 @@ async def sync_data(
             r_updated_at = r_updated_at.replace(tzinfo=timezone.utc)
         r_timestamp = int(r_updated_at.timestamp() * 1000)
         r_counter = getattr(r, "row_version", 0)
-        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id="server")
+        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id=server_node_id)
         record_dict["hlc"] = r_hlc.to_string()
         oi_result.append(record_dict)
         
@@ -148,7 +156,7 @@ async def sync_data(
             r_updated_at = r_updated_at.replace(tzinfo=timezone.utc)
         r_timestamp = int(r_updated_at.timestamp() * 1000)
         r_counter = getattr(r, "row_version", 0)
-        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id="server")
+        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id=server_node_id)
         record_dict["hlc"] = r_hlc.to_string()
         stock_result.append(record_dict)
         

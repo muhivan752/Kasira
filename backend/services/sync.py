@@ -14,7 +14,7 @@ from backend.services.crdt import HLC, PNCounter
 def utc_now():
     return datetime.now(timezone.utc)
 
-async def process_table_sync(db: AsyncSession, model_class, client_records: List[Dict[str, Any]], filter_kwargs: dict, server_hlc: HLC):
+async def process_table_sync(db: AsyncSession, model_class, client_records: List[Dict[str, Any]], filter_kwargs: dict, server_hlc: HLC, conflict_strategy: str = "hlc_lww"):
     """
     Pure CRDT Sync logic for a table using HLC and row_version.
     """
@@ -43,6 +43,11 @@ async def process_table_sync(db: AsyncSession, model_class, client_records: List
         db_record = result.scalar_one_or_none()
         
         if db_record:
+            # Financial Strict Strategy: Server wins if status is final
+            if conflict_strategy == "financial_strict" and hasattr(db_record, "status"):
+                if db_record.status in ["paid", "completed", "refunded", "cancelled"]:
+                    continue # Skip update, server wins
+            
             # Optimistic Locking & CRDT Conflict Resolution
             # We use row_version to track changes. If the client sends a row_version,
             # we can use it to detect conflicts. But with HLC, we compare causality.
@@ -56,7 +61,7 @@ async def process_table_sync(db: AsyncSession, model_class, client_records: List
             
             db_timestamp = int(db_updated_at.timestamp() * 1000)
             db_counter = getattr(db_record, "row_version", 0)
-            db_hlc = HLC(timestamp=db_timestamp, counter=db_counter, node_id="server")
+            db_hlc = HLC(timestamp=db_timestamp, counter=db_counter, node_id=server_hlc.node_id)
             
             if client_hlc.compare(db_hlc) > 0:
                 # Client wins
@@ -117,7 +122,8 @@ async def process_stock_sync(db: AsyncSession, client_records: List[Dict[str, An
             
             db_record.crdt_positive = merged_p
             db_record.crdt_negative = merged_n
-            db_record.computed_stock = PNCounter.get_value(merged_p, merged_n)
+            # Guard against negative computed_stock
+            db_record.computed_stock = max(0, PNCounter.get_value(merged_p, merged_n))
             
             db_record.updated_at = utc_now()
             if hasattr(db_record, "row_version"):
@@ -130,14 +136,15 @@ async def process_stock_sync(db: AsyncSession, client_records: List[Dict[str, An
                 product_id=product_id,
                 crdt_positive=client_p,
                 crdt_negative=client_n,
-                computed_stock=PNCounter.get_value(client_p, client_n),
+                # Guard against negative computed_stock
+                computed_stock=max(0, PNCounter.get_value(client_p, client_n)),
                 row_version=1
             )
             db.add(new_record)
             
     await db.commit()
 
-async def get_table_changes(db: AsyncSession, model_class, filter_kwargs: dict, last_sync_hlc: HLC) -> List[Dict[str, Any]]:
+async def get_table_changes(db: AsyncSession, model_class, filter_kwargs: dict, last_sync_hlc: HLC, server_node_id: str) -> List[Dict[str, Any]]:
     stmt = select(model_class)
     for k, v in filter_kwargs.items():
         stmt = stmt.filter(getattr(model_class, k) == v)
@@ -181,7 +188,7 @@ async def get_table_changes(db: AsyncSession, model_class, filter_kwargs: dict, 
             r_updated_at = r_updated_at.replace(tzinfo=timezone.utc)
         r_timestamp = int(r_updated_at.timestamp() * 1000)
         r_counter = getattr(r, "row_version", 0)
-        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id="server")
+        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id=server_node_id)
         record_dict["hlc"] = r_hlc.to_string()
         
         result_list.append(record_dict)
