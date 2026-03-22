@@ -69,11 +69,16 @@ File dikerjakan:
    Sudah: Create migration for missing row_versions, update models, create CRDT math engine (HLC, PNCounter), create sync orchestrator, refactor /sync endpoint to use Pure CRDT.
    Tinggal: Testing sync endpoint.
 
+✅ Selesai:
+- Setup Flutter App UI (Kasir) - Sync Settings Page
+- Setup Flutter App UI (Kasir) - Profile Page
+- Setup Flutter App UI (Kasir) - Cash Drawer History Page
+- Backend Shift Management (models, schemas, migrations, API routes, sync engine integration)
+
 ❌ Belum:
-- Flutter kasir app (3 layar tersisa)
 - Flutter dapur app (8 layar)
 - Self-order Next.js
-- CRDT sync engine
+- CRDT sync engine (Testing)
 - Pilot Otomatis rule engine
 - AI chatbot SSE streaming
 

@@ -8,6 +8,8 @@ class SyncPayload(BaseModel):
     order_items: List[Dict[str, Any]] = []
     payments: List[Dict[str, Any]] = []
     outlet_stock: List[Dict[str, Any]] = []
+    shifts: List[Dict[str, Any]] = []
+    cash_activities: List[Dict[str, Any]] = []
 
 class SyncRequest(BaseModel):
     last_sync_hlc: Optional[str] = None

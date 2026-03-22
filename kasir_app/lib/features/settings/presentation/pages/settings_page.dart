@@ -100,7 +100,7 @@ class SettingsPage extends StatelessWidget {
         title.toUpperCase(),
         style: const TextStyle(
           color: AppColors.textSecondary,
-          fontWeight: 'bold',
+          fontWeight: FontWeight.bold,
           fontSize: 12,
           letterSpacing: 1.2,
         ),

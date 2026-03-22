@@ -56,9 +56,9 @@ class ProfilePage extends StatelessWidget {
             padding: EdgeInsets.only(left: 8, bottom: 16),
             child: Text(
               'INFORMASI AKUN',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontWeight: 'bold',
+                fontWeight: FontWeight.bold,
                 fontSize: 12,
                 letterSpacing: 1.2,
               ),
@@ -88,9 +88,9 @@ class ProfilePage extends StatelessWidget {
             padding: EdgeInsets.only(left: 8, bottom: 16),
             child: Text(
               'KEAMANAN',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontWeight: 'bold',
+                fontWeight: FontWeight.bold,
                 fontSize: 12,
                 letterSpacing: 1.2,
               ),

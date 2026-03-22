@@ -101,9 +101,9 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
             padding: EdgeInsets.only(left: 8, bottom: 16),
             child: Text(
               'PENGATURAN SINKRONISASI',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontWeight: 'bold',
+                fontWeight: FontWeight.bold,
                 fontSize: 12,
                 letterSpacing: 1.2,
               ),
@@ -156,9 +156,9 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
             padding: EdgeInsets.only(left: 8, bottom: 16),
             child: Text(
               'DIAGNOSTIK',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontWeight: 'bold',
+                fontWeight: FontWeight.bold,
                 fontSize: 12,
                 letterSpacing: 1.2,
               ),

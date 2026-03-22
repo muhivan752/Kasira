@@ -13,6 +13,7 @@ from backend.models.product import Product
 from backend.models.order import Order, OrderItem
 from backend.models.payment import Payment
 from backend.models.outlet import Outlet
+from backend.models.shift import Shift, CashActivity
 from backend.services.sync import process_table_sync, process_stock_sync, get_table_changes, utc_now
 from backend.services.crdt import HLC
 
@@ -59,6 +60,10 @@ async def sync_data(
             await process_table_sync(db, OrderItem, request.changes.order_items, {}, server_hlc)
         if request.changes.payments:
             await process_table_sync(db, Payment, request.changes.payments, {"outlet_id": outlet_id}, server_hlc, conflict_strategy="financial_strict")
+        if request.changes.shifts:
+            await process_table_sync(db, Shift, request.changes.shifts, {"outlet_id": outlet_id}, server_hlc, conflict_strategy="financial_strict")
+        if request.changes.cash_activities:
+            await process_table_sync(db, CashActivity, request.changes.cash_activities, {}, server_hlc, conflict_strategy="financial_strict")
         if request.changes.outlet_stock:
             await process_stock_sync(db, request.changes.outlet_stock, outlet_id, server_hlc)
             
@@ -76,6 +81,8 @@ async def sync_data(
         orders=await get_table_changes(db, Order, {"outlet_id": outlet_id}, client_last_sync_hlc, server_node_id),
         order_items=[],
         payments=await get_table_changes(db, Payment, {"outlet_id": outlet_id}, client_last_sync_hlc, server_node_id),
+        shifts=await get_table_changes(db, Shift, {"outlet_id": outlet_id}, client_last_sync_hlc, server_node_id),
+        cash_activities=[],
         outlet_stock=[]
     )
     
@@ -161,6 +168,47 @@ async def sync_data(
         stock_result.append(record_dict)
         
     pull_changes.outlet_stock = stock_result
+    
+    # Custom pull for cash_activities
+    stmt = select(CashActivity).join(Shift).filter(Shift.outlet_id == outlet_id)
+    if client_last_sync_hlc and client_last_sync_hlc.timestamp > 0:
+        last_sync_dt = datetime.fromtimestamp(client_last_sync_hlc.timestamp / 1000.0, tz=timezone.utc)
+        last_counter = client_last_sync_hlc.counter
+        stmt = stmt.filter(
+            or_(
+                CashActivity.updated_at > last_sync_dt,
+                and_(
+                    CashActivity.updated_at == last_sync_dt,
+                    CashActivity.row_version > last_counter
+                )
+            )
+        )
+        
+    result = await db.execute(stmt)
+    ca_records = result.scalars().all()
+    
+    ca_result = []
+    for r in ca_records:
+        record_dict = {}
+        for c in r.__table__.columns:
+            val = getattr(r, c.name)
+            if isinstance(val, datetime):
+                record_dict[c.name] = val.isoformat()
+            elif isinstance(val, uuid.UUID):
+                record_dict[c.name] = str(val)
+            else:
+                record_dict[c.name] = val
+                
+        r_updated_at = getattr(r, "updated_at")
+        if r_updated_at.tzinfo is None:
+            r_updated_at = r_updated_at.replace(tzinfo=timezone.utc)
+        r_timestamp = int(r_updated_at.timestamp() * 1000)
+        r_counter = getattr(r, "row_version", 0)
+        r_hlc = HLC(timestamp=r_timestamp, counter=r_counter, node_id=server_node_id)
+        record_dict["hlc"] = r_hlc.to_string()
+        ca_result.append(record_dict)
+        
+    pull_changes.cash_activities = ca_result
     
     return SyncResponse(
         last_sync_hlc=server_hlc.to_string(),
