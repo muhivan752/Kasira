@@ -44,7 +44,7 @@ async def open_shift(
     if existing_shift:
         raise HTTPException(
             status_code=400, 
-            detail="You already have an open shift in this outlet."
+            detail="Shift sudah terbuka, tutup dulu"
         )
 
     shift = Shift(
@@ -125,13 +125,13 @@ async def close_shift(
     shift = result.scalar_one_or_none()
     
     if not shift:
-        raise HTTPException(status_code=404, detail="Shift not found")
+        raise HTTPException(status_code=404, detail="Shift tidak ditemukan")
         
     if shift.status == ShiftStatus.closed:
-        raise HTTPException(status_code=400, detail="Shift is already closed")
+        raise HTTPException(status_code=400, detail="Shift sudah ditutup")
         
     if shift.user_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized to close this shift")
+        raise HTTPException(status_code=403, detail="Tidak berwenang menutup shift ini")
 
     # Calculate expected cash
     # expected_cash = starting_cash + total_income - total_expense + cash_payments
@@ -211,13 +211,13 @@ async def add_cash_activity(
     shift = result.scalar_one_or_none()
     
     if not shift:
-        raise HTTPException(status_code=404, detail="Shift not found")
+        raise HTTPException(status_code=404, detail="Shift tidak ditemukan")
         
     if shift.status == ShiftStatus.closed:
-        raise HTTPException(status_code=400, detail="Cannot add activity to a closed shift")
+        raise HTTPException(status_code=400, detail="Tidak bisa tambah aktivitas ke shift yang sudah tutup")
 
     if shift.user_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized to add activity to this shift")
+        raise HTTPException(status_code=403, detail="Tidak berwenang menambah aktivitas ke shift ini")
 
     activity = CashActivity(
         shift_id=shift_id,

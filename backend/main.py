@@ -61,8 +61,8 @@ class ResponseFormatMiddleware(BaseHTTPMiddleware):
         finally:
             request_id_context.reset(token)
 
-app.add_middleware(TenantMiddleware)
 app.add_middleware(ResponseFormatMiddleware)
+app.add_middleware(TenantMiddleware)
 
 from backend.schemas.response import StandardResponse
 

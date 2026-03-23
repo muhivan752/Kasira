@@ -1,12 +1,10 @@
 from typing import Any, List, Optional
 from uuid import UUID
 from datetime import datetime, timezone
-import random
-import string
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, text
 from sqlalchemy.orm import selectinload
 
 from backend.core.database import get_db
@@ -20,12 +18,6 @@ from backend.models.audit_log import log_audit
 
 router = APIRouter()
 
-def generate_order_number() -> str:
-    """Generate a random order number like ORD-20260321-XXXX"""
-    date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-    random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"ORD-{date_str}-{random_str}"
-
 @router.post("/", response_model=StandardResponse[OrderResponse])
 async def create_order(
     request: Request,
@@ -37,10 +29,13 @@ async def create_order(
     Create a new order and deduct stock (Transaction-First Simple Stock).
     """
     if not order_in.items:
-        raise HTTPException(status_code=400, detail="Order must have at least one item")
+        raise HTTPException(status_code=400, detail="Order harus memiliki minimal 1 item")
 
     # 1. Create Order
-    order_number = generate_order_number()
+    result = await db.execute(text("SELECT nextval('order_display_seq')"))
+    display_number = result.scalar()
+    order_number = f"ORD-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{display_number}"
+    
     order = Order(
         outlet_id=order_in.outlet_id,
         shift_session_id=order_in.shift_session_id,
@@ -48,6 +43,7 @@ async def create_order(
         table_id=order_in.table_id,
         user_id=order_in.user_id or current_user.id,
         order_number=order_number,
+        display_number=display_number,
         order_type=order_in.order_type,
         subtotal=order_in.subtotal,
         service_charge_amount=order_in.service_charge_amount,
@@ -65,14 +61,14 @@ async def create_order(
         # Fetch product to check stock
         product = await db.get(Product, item_in.product_id)
         if not product or product.deleted_at is not None:
-            raise HTTPException(status_code=404, detail=f"Product {item_in.product_id} not found")
+            raise HTTPException(status_code=404, detail="Produk tidak ditemukan")
 
         # Deduct stock if enabled
         if product.stock_enabled:
             if product.stock_qty < item_in.quantity:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Insufficient stock for product {product.name}. Available: {product.stock_qty}"
+                    detail=f"Stok {product.name} tidak mencukupi. Tersedia: {product.stock_qty}"
                 )
             
             new_stock = product.stock_qty - item_in.quantity
@@ -94,7 +90,7 @@ async def create_order(
             )
             result = await db.execute(stmt)
             if result.rowcount == 0:
-                raise HTTPException(status_code=409, detail=f"Concurrent update on product {product.name}")
+                raise HTTPException(status_code=409, detail="Konflik data produk, coba lagi")
 
         # Create Order Item
         order_item = OrderItem(
@@ -183,7 +179,7 @@ async def read_order(
     order = result.scalar_one_or_none()
     
     if not order or order.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail="Order tidak ditemukan")
         
     return StandardResponse(
         success=True,
@@ -207,12 +203,12 @@ async def update_order_status(
     order = result.scalar_one_or_none()
     
     if not order or order.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail="Order tidak ditemukan")
         
     if order.row_version != status_in.row_version:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Order has been modified by another user. Please refresh."
+            detail="Order telah diubah, silakan refresh"
         )
         
     before_state = {"status": order.status}

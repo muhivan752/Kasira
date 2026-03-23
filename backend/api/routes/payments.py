@@ -11,12 +11,14 @@ from backend.api.deps import get_current_user
 from backend.models.user import User
 from backend.models.payment import Payment
 from backend.models.order import Order
+from backend.models.outlet import Outlet
 from backend.models.shift import Shift, ShiftStatus
 from backend.schemas.payment import PaymentCreate, PaymentResponse, PaymentStatus, PaymentMethod
 from backend.schemas.order import OrderStatus
 from backend.schemas.response import StandardResponse
 from backend.models.audit_log import log_audit
 from backend.services.midtrans import midtrans_service
+from backend.utils.encryption import decrypt_field
 
 router = APIRouter()
 
@@ -34,7 +36,7 @@ async def create_payment(
     if payment_in.order_id:
         order = await db.get(Order, payment_in.order_id)
         if not order or order.deleted_at is not None:
-            raise HTTPException(status_code=404, detail="Order not found")
+            raise HTTPException(status_code=404, detail="Order tidak ditemukan")
             
     # Determine initial status based on method
     initial_status = PaymentStatus.pending
@@ -81,27 +83,35 @@ async def create_payment(
     
     # Generate QRIS via Midtrans if method is qris
     if payment_in.payment_method == PaymentMethod.qris:
-        try:
-            midtrans_res = await midtrans_service.create_qris_transaction(
-                order_id=str(payment.id),
-                gross_amount=float(payment.amount_due),
-                custom_field1=str(payment.order_id) if payment.order_id else None
-            )
-            
-            # Extract QRIS URL from actions
-            actions = midtrans_res.get("actions", [])
-            for action in actions:
-                if action.get("name") == "generate-qr-code":
-                    qris_url = action.get("url")
-                    break
-                    
-            payment.qris_url = qris_url
-            payment.midtrans_raw = midtrans_res
-            
-        except Exception as e:
-            # If Midtrans fails, we can still save the payment as pending/failed, 
-            # but usually we want to abort. For now, let's raise HTTP 500.
-            raise HTTPException(status_code=500, detail=f"Failed to generate QRIS: {str(e)}")
+        outlet = await db.get(Outlet, payment_in.outlet_id)
+        if not outlet or not outlet.midtrans_server_key_encrypted:
+            payment.status = PaymentStatus.failed
+            payment.midtrans_raw = {"error": "Outlet not configured for QRIS"}
+        else:
+            try:
+                server_key = decrypt_field(outlet.midtrans_server_key_encrypted)
+                midtrans_res = await midtrans_service.create_qris_transaction(
+                    order_id=str(payment.id),
+                    gross_amount=float(payment.amount_due),
+                    server_key=server_key,
+                    is_production=outlet.midtrans_is_production,
+                    custom_field1=str(payment.order_id) if payment.order_id else None
+                )
+                
+                # Extract QRIS URL from actions
+                actions = midtrans_res.get("actions", [])
+                for action in actions:
+                    if action.get("name") == "generate-qr-code":
+                        qris_url = action.get("url")
+                        break
+                        
+                payment.qris_url = qris_url
+                payment.midtrans_raw = midtrans_res
+                
+            except Exception as e:
+                # If Midtrans fails, we save the payment as failed
+                payment.status = PaymentStatus.failed
+                payment.midtrans_raw = {"error": str(e)}
     
     # If cash payment is successful, update order status to completed
     if initial_status == PaymentStatus.paid and payment_in.order_id:
@@ -114,6 +124,7 @@ async def create_payment(
             )
         )
         await db.execute(stmt)
+        # TODO: Send WA receipt for cash payment
         
     await db.commit()
     await db.refresh(payment)
@@ -153,17 +164,6 @@ async def midtrans_webhook(
     signature_key = payload.get("signature_key")
     transaction_status = payload.get("transaction_status")
     
-    # Verify signature
-    is_valid = midtrans_service.verify_signature(
-        order_id=order_id,
-        status_code=status_code,
-        gross_amount=gross_amount,
-        signature_key=signature_key
-    )
-    
-    if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid signature key")
-        
     try:
         payment_uuid = UUID(order_id)
     except ValueError:
@@ -171,7 +171,25 @@ async def midtrans_webhook(
         
     payment = await db.get(Payment, payment_uuid)
     if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Pembayaran tidak ditemukan")
+        
+    outlet = await db.get(Outlet, payment.outlet_id)
+    if not outlet or not outlet.midtrans_server_key_encrypted:
+        raise HTTPException(status_code=400, detail="Outlet not configured for QRIS")
+        
+    server_key = decrypt_field(outlet.midtrans_server_key_encrypted)
+    
+    # Verify signature
+    is_valid = midtrans_service.verify_signature(
+        order_id=order_id,
+        status_code=status_code,
+        gross_amount=gross_amount,
+        signature_key=signature_key,
+        server_key=server_key
+    )
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Signature tidak valid")
         
     # Determine new status
     new_status = payment.status
@@ -199,11 +217,36 @@ async def midtrans_webhook(
                     )
                 )
                 await db.execute(stmt)
+                # TODO: Send WA receipt for QRIS payment
                 
         await db.commit()
         
     return {"status": "ok"}
 
+@router.get("/{payment_id}/status", response_model=StandardResponse[Dict[str, Any]])
+async def get_payment_status(
+    request: Request,
+    payment_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get payment status (polling endpoint for QRIS).
+    """
+    payment = await db.get(Payment, payment_id)
+    if not payment or payment.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Pembayaran tidak ditemukan")
+        
+    return StandardResponse(
+        success=True,
+        data={
+            "id": str(payment.id),
+            "status": payment.status,
+            "paid_at": payment.paid_at,
+            "qris_url": payment.qris_url
+        },
+        request_id=request.state.request_id
+    )
 
 @router.get("/", response_model=StandardResponse[List[PaymentResponse]])
 async def read_payments(
@@ -249,7 +292,7 @@ async def read_payment(
     """
     payment = await db.get(Payment, payment_id)
     if not payment or payment.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Pembayaran tidak ditemukan")
         
     return StandardResponse(
         success=True,

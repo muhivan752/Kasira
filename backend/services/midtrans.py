@@ -6,28 +6,26 @@ from typing import Dict, Any, Optional
 from backend.core.config import settings
 
 class MidtransService:
-    def __init__(self):
-        self.server_key = settings.MIDTRANS_SERVER_KEY
-        self.is_production = settings.MIDTRANS_IS_PRODUCTION
+    def _get_base_url(self, is_production: bool) -> str:
+        if is_production:
+            return "https://api.midtrans.com/v2"
+        return "https://api.sandbox.midtrans.com/v2"
         
-        if self.is_production:
-            self.base_url = "https://api.midtrans.com/v2"
-        else:
-            self.base_url = "https://api.sandbox.midtrans.com/v2"
-            
-        auth_string = f"{self.server_key}:".encode("utf-8")
-        self.auth_header = f"Basic {base64.b64encode(auth_string).decode('utf-8')}"
-        
-        self.headers = {
+    def _get_headers(self, server_key: str) -> Dict[str, str]:
+        auth_string = f"{server_key}:".encode("utf-8")
+        auth_header = f"Basic {base64.b64encode(auth_string).decode('utf-8')}"
+        return {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": self.auth_header
+            "Authorization": auth_header
         }
 
     async def create_qris_transaction(
         self, 
         order_id: str, 
         gross_amount: float, 
+        server_key: str,
+        is_production: bool,
         custom_field1: Optional[str] = None
     ) -> Dict[str, Any]:
         """
@@ -44,10 +42,13 @@ class MidtransService:
         if custom_field1:
             payload["custom_field1"] = custom_field1
 
+        base_url = self._get_base_url(is_production)
+        headers = self._get_headers(server_key)
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/charge",
-                headers=self.headers,
+                f"{base_url}/charge",
+                headers=headers,
                 json=payload,
                 timeout=10.0
             )
@@ -60,12 +61,13 @@ class MidtransService:
         order_id: str, 
         status_code: str, 
         gross_amount: str, 
-        signature_key: str
+        signature_key: str,
+        server_key: str
     ) -> bool:
         """
         Verify Midtrans webhook signature key.
         """
-        payload = f"{order_id}{status_code}{gross_amount}{self.server_key}"
+        payload = f"{order_id}{status_code}{gross_amount}{server_key}"
         calculated_signature = hashlib.sha512(payload.encode("utf-8")).hexdigest()
         return calculated_signature == signature_key
 
